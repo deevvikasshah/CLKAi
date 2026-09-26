@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Money } from "@/components/ui/Money";
 import { ProductCard, type ProductCardData } from "@/components/storefront/ProductCard";
+import { CompareToggle } from "@/components/storefront/CompareToggle";
+import { addToCart } from "@/app/actions/cart";
+import { addToWishlist } from "@/app/actions/wishlist";
 
 interface ProductPageProps {
   params: { slug: string };
@@ -122,18 +125,40 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           )}
 
           <div className="flex flex-wrap gap-3 pt-2">
-            <button className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 focus-ring">
-              Add to Cart
-            </button>
-            <button className="rounded-lg border border-ink-300 px-5 py-2.5 text-sm font-semibold text-ink-900 hover:border-brand-500 focus-ring">
-              Buy Now
-            </button>
-            <button className="rounded-lg border border-ink-300 px-4 py-2.5 text-sm font-medium text-ink-700 hover:border-brand-500 focus-ring">
-              Wishlist
-            </button>
-            <button className="rounded-lg border border-ink-300 px-4 py-2.5 text-sm font-medium text-ink-700 hover:border-brand-500 focus-ring">
-              Compare
-            </button>
+            {defaultVariant && (
+              <>
+                <form action={addToCart}>
+                  <input type="hidden" name="variantId" value={defaultVariant.id} />
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 focus-ring"
+                  >
+                    Add to Cart
+                  </button>
+                </form>
+                <form action={addToCart}>
+                  <input type="hidden" name="variantId" value={defaultVariant.id} />
+                  <input type="hidden" name="redirectTo" value="/checkout" />
+                  <button
+                    type="submit"
+                    className="rounded-lg border border-ink-300 px-5 py-2.5 text-sm font-semibold text-ink-900 hover:border-brand-500 focus-ring"
+                  >
+                    Buy Now
+                  </button>
+                </form>
+                <form action={addToWishlist}>
+                  <input type="hidden" name="variantId" value={defaultVariant.id} />
+                  <input type="hidden" name="productSlug" value={product.slug} />
+                  <button
+                    type="submit"
+                    className="rounded-lg border border-ink-300 px-4 py-2.5 text-sm font-medium text-ink-700 hover:border-brand-500 focus-ring"
+                  >
+                    Wishlist
+                  </button>
+                </form>
+              </>
+            )}
+            <CompareToggle productSlug={product.slug} />
           </div>
 
           {product.warrantyText && (
