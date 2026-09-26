@@ -22,6 +22,9 @@ async function main() {
     { name: "Store Manager – Pune (Demo)", email: "storemanager.pune@demo.clkai.local", role: "store_manager" },
     { name: "Catalog Manager (Demo)", email: "catalog@demo.clkai.local", role: "catalog_manager" },
     { name: "Repair Manager (Demo)", email: "repair@demo.clkai.local", role: "repair_manager" },
+    { name: "Sales Executive (Demo)", email: "sales@demo.clkai.local", role: "sales_executive" },
+    { name: "Support Executive (Demo)", email: "support@demo.clkai.local", role: "support_executive" },
+    { name: "Finance Manager (Demo)", email: "finance@demo.clkai.local", role: "finance_manager" },
   ];
   const passwordHash = await hashPassword("ChangeMe!2024");
 

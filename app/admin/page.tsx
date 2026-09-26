@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { isAdminRole } from "@/lib/roles";
+import { isAdminRole, hasPermission, PERMISSIONS, canManageRepairs } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 
 const roleLabels: Record<string, string> = {
@@ -44,14 +44,19 @@ export default async function AdminDashboardPage() {
         <StatCard label="New enquiries" value={newEnquiries} />
       </div>
 
-      <div className="mt-8 flex gap-3">
-        <Link
-          href="/admin/stores"
-          className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 hover:border-brand-500 focus-ring"
-        >
-          Manage Stores
-        </Link>
-      </div>
+      <nav className="mt-8 flex flex-wrap gap-3">
+        {(hasPermission(session.role, PERMISSIONS.MANAGE_STORES) || hasPermission(session.role, PERMISSIONS.MANAGE_STORE_OWN)) && (
+          <AdminNavLink href="/admin/stores" label="Manage Stores" />
+        )}
+        {hasPermission(session.role, PERMISSIONS.MANAGE_PRODUCTS) && <AdminNavLink href="/admin/products" label="Manage Products" />}
+        {hasPermission(session.role, PERMISSIONS.MANAGE_BRANDS) && <AdminNavLink href="/admin/brands" label="Manage Brands" />}
+        {canManageRepairs(session.role) && <AdminNavLink href="/admin/repairs" label="Repair Bookings" />}
+        {hasPermission(session.role, PERMISSIONS.RESPOND_ENQUIRIES) && <AdminNavLink href="/admin/enquiries" label="Enquiries" />}
+        {(hasPermission(session.role, PERMISSIONS.MANAGE_FINANCE) || hasPermission(session.role, PERMISSIONS.MANAGE_ORDERS)) && (
+          <AdminNavLink href="/admin/orders" label="Orders" />
+        )}
+        {hasPermission(session.role, PERMISSIONS.VIEW_AUDIT_LOG) && <AdminNavLink href="/admin/audit-log" label="Audit Log" />}
+      </nav>
 
       <form action="/api/auth/logout" method="post" className="mt-4">
         <button
@@ -62,6 +67,17 @@ export default async function AdminDashboardPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+function AdminNavLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 hover:border-brand-500 focus-ring"
+    >
+      {label}
+    </Link>
   );
 }
 

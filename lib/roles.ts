@@ -74,3 +74,7 @@ export function hasPermission(role: string, permission: Permission): boolean {
 export function isAdminRole(role: string): boolean {
   return (ADMIN_ROLES as string[]).includes(role);
 }
+
+export function canManageRepairs(role: string): boolean {
+  return hasPermission(role, PERMISSIONS.MANAGE_REPAIRS) || hasPermission(role, PERMISSIONS.MANAGE_REPAIRS_OWN_STORE);
+}
