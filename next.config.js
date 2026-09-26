@@ -23,6 +23,22 @@ const securityHeaders = [
   },
 ];
 
+// HSTS is opt-in via an explicit env var, not NODE_ENV — `next start` sets
+// NODE_ENV=production even when nothing in front of it terminates TLS yet.
+// Set ENABLE_HSTS=1 only once the production deployment is confirmed to be
+// served over HTTPS end-to-end; enabling it prematurely can lock browsers
+// out of the site if HTTPS isn't actually in place.
+const headersList =
+  process.env.ENABLE_HSTS === "1"
+    ? [
+        ...securityHeaders,
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains; preload",
+        },
+      ]
+    : securityHeaders;
+
 const nextConfig = {
   reactStrictMode: true,
   images: {
@@ -32,7 +48,7 @@ const nextConfig = {
     return [
       {
         source: "/:path*",
-        headers: securityHeaders,
+        headers: headersList,
       },
     ];
   },

@@ -5,9 +5,11 @@ import { ProductCard, type ProductCardData } from "@/components/storefront/Produ
 import { CompareToggle } from "@/components/storefront/CompareToggle";
 import { addToCart } from "@/app/actions/cart";
 import { addToWishlist } from "@/app/actions/wishlist";
+import { submitProductEnquiry } from "@/app/actions/productEnquiry";
 
 interface ProductPageProps {
   params: { slug: string };
+  searchParams?: { enquirySubmitted?: string };
 }
 
 export async function generateMetadata({ params }: ProductPageProps) {
@@ -15,7 +17,7 @@ export async function generateMetadata({ params }: ProductPageProps) {
   return { title: product?.title ?? "Product not found" };
 }
 
-export default async function ProductDetailPage({ params }: ProductPageProps) {
+export default async function ProductDetailPage({ params, searchParams }: ProductPageProps) {
   const product = await prisma.product.findUnique({
     where: { slug: params.slug, status: "published" },
     include: {
@@ -163,6 +165,42 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
           {product.warrantyText && (
             <p className="text-sm text-ink-500">Warranty: {product.warrantyText}</p>
+          )}
+
+          {searchParams?.enquirySubmitted === "1" ? (
+            <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+              Thank you — your enquiry has been received. A member of the CLKAi team will get in touch.
+            </p>
+          ) : (
+            <details className="rounded-md border border-ink-200 p-3">
+              <summary className="cursor-pointer text-sm font-medium text-ink-900">Product enquiry</summary>
+              <form action={submitProductEnquiry} className="mt-3 flex flex-col gap-3">
+                <input type="hidden" name="productId" value={product.id} />
+                <input type="hidden" name="productSlug" value={product.slug} />
+                <input
+                  name="name"
+                  placeholder="Your name"
+                  required
+                  className="rounded-lg border border-ink-300 px-3 py-2 text-sm focus-ring"
+                />
+                <input
+                  name="phone"
+                  placeholder="10-digit mobile number"
+                  required
+                  inputMode="numeric"
+                  className="rounded-lg border border-ink-300 px-3 py-2 text-sm focus-ring"
+                />
+                <textarea
+                  name="message"
+                  placeholder="Your question (optional)"
+                  rows={2}
+                  className="rounded-lg border border-ink-300 px-3 py-2 text-sm focus-ring"
+                />
+                <button type="submit" className="self-start rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 focus-ring">
+                  Send enquiry
+                </button>
+              </form>
+            </details>
           )}
         </div>
       </div>
