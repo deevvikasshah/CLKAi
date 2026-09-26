@@ -1,0 +1,504 @@
+// CLKAi platform schema.
+//
+// Dev target: SQLite (file, zero-infra). Production target: Postgres
+// (Neon/Supabase free tier — affordable, no server to manage). Only
+// `datasource.provider` + `DATABASE_URL` change between the two; every
+// field type used below is supported on both connectors on purpose
+// (no native Postgres enum/array types — role/status fields are plain
+// strings validated in application code via lib/rbac.ts and lib/enums.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & access
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String // super_admin | ops_admin | store_manager | catalog_manager | repair_manager | sales_executive | support_executive | finance_manager | customer
+  phone        String?
+  isActive     Boolean  @default(true)
+  mfaEnabled   Boolean  @default(false)
+  mfaSecret    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  storeAssignments StoreAssignment[]
+  addresses        Address[]
+  carts            Cart[]
+  wishlists        Wishlist[]
+  orders           Order[]
+  auditLogs        AuditLog[]
+  repairChanges    RepairStatusHistory[]
+  mediaUploads     MediaUpload[]
+
+  @@index([role])
+}
+
+model StoreAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  storeId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId])
+}
+
+// ---------------------------------------------------------------------------
+// Stores
+// ---------------------------------------------------------------------------
+
+model Store {
+  id                        String   @id @default(cuid())
+  storeName                 String
+  slug                      String   @unique
+  status                    String   @default("draft") // draft | published | archived
+  storeCode                 String   @unique
+  addressLine1              String
+  addressLine2              String?
+  locality                  String?
+  city                      String
+  state                     String
+  country                   String   @default("India")
+  pincode                   String
+  latitude                  Float?
+  longitude                 Float?
+  phone                     String?
+  whatsapp                  String?
+  email                     String?
+  openingHoursJson          String? // JSON: { mon: "10:00-20:00", ... }
+  servicesJson              String? // JSON string[]: sales, laptop_repair, ...
+  storeImagesJson           String? // JSON string[] of media URLs
+  storeManagerName          String?
+  mapUrl                    String?
+  pickupAvailable           Boolean  @default(false)
+  repairAvailable           Boolean  @default(false)
+  corporateSupportAvailable Boolean  @default(false)
+  operationalState          String   @default("coming_soon") // open | closed | temporarily_closed | coming_soon
+  isVerified                Boolean  @default(false) // false => "Store details pending verification by CLKAi"
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  assignments     StoreAssignment[]
+  inventory       StoreInventory[]
+  orders          Order[]
+  repairBookings  RepairBooking[]
+  enquiries       Enquiry[]
+  offers          Offer[]
+
+  @@index([status])
+  @@index([city])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Brand {
+  id      String  @id @default(cuid())
+  name    String  @unique
+  slug    String  @unique
+  logoUrl String?
+  enabled Boolean @default(true) // Dell is seeded disabled=false and must stay off by default
+
+  products Product[]
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  name      String
+  slug      String  @unique
+  parentId  String?
+  sortOrder Int     @default(0)
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  brandId          String
+  categoryId       String
+  sku              String   @unique
+  modelNumber      String?
+  description      String?
+  boxContentsJson  String? // JSON string[]
+  condition        String   @default("new") // new | refurbished
+  refurbishedGrade String? // e.g. "Grade A" — only set when condition = refurbished
+  warrantyText     String?
+  imagesJson       String? // JSON string[] of media URLs
+  videoUrl         String?
+  status           String   @default("draft") // draft | published | archived
+  isFeatured       Boolean  @default(false)
+  isBestSeller     Boolean  @default(false)
+  isNewArrival     Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  brand          Brand                   @relation(fields: [brandId], references: [id])
+  category       Category                @relation(fields: [categoryId], references: [id])
+  variants       ProductVariant[]
+  specifications ProductSpecification[]
+  offers         Offer[]
+
+  @@index([status])
+  @@index([brandId])
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id             String  @id @default(cuid())
+  productId      String
+  variantName    String // e.g. "8GB / 256GB — Midnight Black"
+  sku            String  @unique
+  price          Float
+  mrp            Float?
+  attributesJson String? // JSON: { color, storage, ram, screenSize, ... }
+  isDefault      Boolean @default(false)
+
+  product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  storeInventory StoreInventory[]
+  cartItems      CartItem[]
+  wishlistItems  WishlistItem[]
+  orderItems     OrderItem[]
+
+  @@index([productId])
+}
+
+model ProductSpecification {
+  id        String @id @default(cuid())
+  productId String
+  groupName String // e.g. "Performance", "Display", "Battery"
+  specKey   String
+  specValue String
+  sortOrder Int    @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model StoreInventory {
+  id              String  @id @default(cuid())
+  storeId         String
+  variantId       String
+  stockQuantity   Int     @default(0)
+  pickupAvailable Boolean @default(false)
+
+  store   Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, variantId])
+}
+
+// ---------------------------------------------------------------------------
+// Cart, wishlist, orders
+// ---------------------------------------------------------------------------
+
+model Cart {
+  id           String   @id @default(cuid())
+  userId       String?
+  sessionToken String?  @unique // guest cart identifier (HttpOnly cookie value)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int    @default(1)
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, variantId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items WishlistItem[]
+}
+
+model WishlistItem {
+  id         String @id @default(cuid())
+  wishlistId String
+  variantId  String
+
+  wishlist Wishlist       @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  variant  ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, variantId])
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  label     String? // "Home", "Office"
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  phone     String
+  isDefault Boolean @default(false)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+}
+
+model Order {
+  id                String   @id @default(cuid())
+  orderNumber       String   @unique
+  userId            String?
+  guestEmail        String?
+  guestPhone        String?
+  status            String   @default("placed") // placed | confirmed | shipped | delivered | cancelled | return_requested | returned
+  subtotal          Float
+  discount          Float    @default(0)
+  tax               Float    @default(0)
+  shipping          Float    @default(0)
+  total             Float
+  addressId         String?
+  storePickupId     String?
+  paymentStatus     String   @default("pending") // pending | authorized | paid | failed | refunded
+  paymentProvider   String?
+  paymentRef        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user      User?       @relation(fields: [userId], references: [id])
+  address   Address?    @relation(fields: [addressId], references: [id])
+  store     Store?      @relation(fields: [storePickupId], references: [id])
+  items     OrderItem[]
+  payments  Payment[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model OrderItem {
+  id                   String @id @default(cuid())
+  orderId              String
+  variantId            String
+  productTitleSnapshot String
+  quantity             Int
+  price                Float
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  orderId        String
+  provider       String // "mock" in dev; razorpay | cashfree | payu | phonepe in production
+  providerRefId  String?
+  amount         Float
+  status         String   @default("initiated") // initiated | authorized | captured | failed | refunded
+  rawPayloadJson String? // gateway webhook payload for reconciliation only — never card/PIN data
+  createdAt      DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Offers & coupons
+// ---------------------------------------------------------------------------
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  description    String?
+  discountType   String // percentage | flat
+  discountValue  Float
+  minOrderValue  Float?
+  startsAt       DateTime
+  endsAt         DateTime
+  usageLimit     Int?
+  usedCount      Int       @default(0)
+  active         Boolean   @default(true)
+
+  offers Offer[]
+}
+
+model Offer {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  scopeType    String // product | brand | store | seasonal | bank | exchange
+  productId    String?
+  storeId      String?
+  startsAt     DateTime
+  endsAt       DateTime
+  termsText    String
+  couponId     String?
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  product Product? @relation(fields: [productId], references: [id])
+  store   Store?   @relation(fields: [storeId], references: [id])
+  coupon  Coupon?  @relation(fields: [couponId], references: [id])
+
+  @@index([active])
+}
+
+// ---------------------------------------------------------------------------
+// Enquiries
+// ---------------------------------------------------------------------------
+
+model Enquiry {
+  id                String   @id @default(cuid())
+  name              String
+  phone             String
+  email             String?
+  message           String?
+  sourcePage        String
+  type              String // product | callback | whatsapp | contact
+  productId         String?
+  storeId           String?
+  consentMarketing  Boolean  @default(false)
+  status            String   @default("new") // new | in_progress | closed
+  assignedToUserId  String?
+  createdAt         DateTime @default(now())
+
+  store Store? @relation(fields: [storeId], references: [id])
+}
+
+model CorporateEnquiry {
+  id                    String   @id @default(cuid())
+  organisationName      String
+  contactPerson         String
+  workEmail             String
+  phone                 String
+  city                  String
+  gstin                 String?
+  productCategory       String
+  preferredBrands       String?
+  approxQuantity        String?
+  budgetRange           String?
+  requiredDeliveryDate  DateTime?
+  requirementDescription String
+  consentFollowUp       Boolean  @default(false)
+  status                String   @default("new") // new | in_progress | closed
+  createdAt             DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Repairs
+// ---------------------------------------------------------------------------
+
+model RepairBooking {
+  id                       String   @id @default(cuid())
+  referenceNumber          String   @unique
+  deviceType               String // laptop | smartphone | tablet | desktop | accessory_other
+  brand                    String?
+  model                    String?
+  issueType                String
+  issueDescription         String?
+  storeId                  String
+  serviceMode              String // walk_in | pickup_drop | callback | whatsapp
+  customerName             String
+  customerPhone            String
+  customerEmail            String?
+  consentDataDiagnostics   Boolean  @default(false)
+  status                   String   @default("request_received")
+  diagnosticFee            Float?
+  estimateAmount           Float?
+  warrantyPeriodText       String?  // set only after CLKAi confirms; see lib/copy.ts default
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  store        Store                 @relation(fields: [storeId], references: [id])
+  statusLog    RepairStatusHistory[]
+
+  @@index([status])
+  @@index([storeId])
+}
+
+model RepairStatusHistory {
+  id              String   @id @default(cuid())
+  repairBookingId String
+  status          String
+  note            String?
+  changedByUserId String?
+  createdAt       DateTime @default(now())
+
+  repairBooking RepairBooking @relation(fields: [repairBookingId], references: [id], onDelete: Cascade)
+  changedBy     User?         @relation(fields: [changedByUserId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Privacy, audit, content
+// ---------------------------------------------------------------------------
+
+model ConsentRecord {
+  id                 String   @id @default(cuid())
+  purpose            String // marketing | repair_diagnostics | terms_acceptance | cookies_analytics | ...
+  policyVersion      String
+  sourcePage         String
+  customerIdentifier String? // email/phone hash or userId, when available
+  consentGiven       Boolean
+  timestamp          DateTime @default(now())
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  actorUserId    String?
+  action         String // e.g. "store.publish", "product.price_change", "login.failed"
+  entityType     String?
+  entityId       String?
+  metadataJson   String?
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([action])
+  @@index([entityType, entityId])
+}
+
+model ContentPage {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  bodyMarkdown  String
+  status        String   @default("draft") // draft | published
+  needsLegalReview Boolean @default(true)
+  updatedAt     DateTime @updatedAt
+}
+
+model MediaUpload {
+  id               String   @id @default(cuid())
+  filename         String
+  storedPath       String
+  mimeType         String
+  sizeBytes        Int
+  uploadedByUserId String?
+  createdAt        DateTime @default(now())
+
+  uploadedBy User? @relation(fields: [uploadedByUserId], references: [id])
+}

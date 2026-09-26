@@ -1,0 +1,26 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+
+export const metadata: Metadata = {
+  title: {
+    default: "CLKAi — Laptops, Smartphones, Tablets, Accessories & Repairs",
+    template: "%s | CLKAi",
+  },
+  description:
+    "CLKAi is a multi-store electronics retailer in Maharashtra offering laptops, smartphones, tablets, accessories, networking products and repair services.",
+  robots: { index: true, follow: true },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en-IN">
+      <body className="flex min-h-screen flex-col bg-white font-sans text-ink-900 antialiased">
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+      </body>
+    </html>
+  );
+}
