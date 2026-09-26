@@ -50,6 +50,7 @@ export default async function AdminDashboardPage() {
         )}
         {hasPermission(session.role, PERMISSIONS.MANAGE_PRODUCTS) && <AdminNavLink href="/admin/products" label="Manage Products" />}
         {hasPermission(session.role, PERMISSIONS.MANAGE_BRANDS) && <AdminNavLink href="/admin/brands" label="Manage Brands" />}
+        {hasPermission(session.role, PERMISSIONS.MANAGE_OFFERS) && <AdminNavLink href="/admin/offers" label="Manage Offers" />}
         {canManageRepairs(session.role) && <AdminNavLink href="/admin/repairs" label="Repair Bookings" />}
         {hasPermission(session.role, PERMISSIONS.RESPOND_ENQUIRIES) && <AdminNavLink href="/admin/enquiries" label="Enquiries" />}
         {(hasPermission(session.role, PERMISSIONS.MANAGE_FINANCE) || hasPermission(session.role, PERMISSIONS.MANAGE_ORDERS)) && (

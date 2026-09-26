@@ -9,6 +9,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../lib/auth";
+import { legalPageSeeds } from "../lib/legalContentSeed";
 
 const prisma = new PrismaClient();
 
@@ -211,6 +212,21 @@ async function main() {
         price: p.price,
         mrp: p.mrp,
         isDefault: true,
+      },
+    });
+  }
+
+  // --- Legal policy pages (draft, pending legal review) -------------------
+  for (const page of legalPageSeeds) {
+    await prisma.contentPage.upsert({
+      where: { slug: page.slug },
+      update: {},
+      create: {
+        slug: page.slug,
+        title: page.title,
+        bodyMarkdown: page.bodyMarkdown,
+        status: "published",
+        needsLegalReview: true,
       },
     });
   }

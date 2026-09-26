@@ -16,6 +16,12 @@ export const siteConfig = {
     registeredAddress: null as string | null,
   },
 
+  security: {
+    // Responsible-disclosure contact. Set once CLKAi designates one —
+    // never invent an address here.
+    disclosureEmail: null as string | null,
+  },
+
   legal: {
     gstin: null as string | null, // only render if non-null AND approved for public display
   },
