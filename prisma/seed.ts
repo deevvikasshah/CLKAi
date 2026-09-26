@@ -102,6 +102,8 @@ async function main() {
     { name: "Smartphones", slug: "smartphones" },
     { name: "Tablets", slug: "tablets" },
     { name: "Accessories", slug: "accessories" },
+    { name: "Gaming", slug: "gaming" },
+    { name: "Networking", slug: "networking" },
   ];
   const categories: Record<string, string> = {};
   for (const c of categoryDefs) {
