@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { isAdminRole } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
@@ -43,7 +44,16 @@ export default async function AdminDashboardPage() {
         <StatCard label="New enquiries" value={newEnquiries} />
       </div>
 
-      <form action="/api/auth/logout" method="post" className="mt-8">
+      <div className="mt-8 flex gap-3">
+        <Link
+          href="/admin/stores"
+          className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 hover:border-brand-500 focus-ring"
+        >
+          Manage Stores
+        </Link>
+      </div>
+
+      <form action="/api/auth/logout" method="post" className="mt-4">
         <button
           type="submit"
           className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 hover:border-brand-500 focus-ring"

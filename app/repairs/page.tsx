@@ -5,6 +5,11 @@ import { repairWarrantyFallback } from "@/lib/siteConfig";
 
 export const metadata = { title: "Repairs & Services" };
 
+// The store dropdown must reflect admin publish/unpublish changes without a
+// rebuild — this page has no dynamic input (no searchParams, no cookies)
+// so Next would otherwise cache it fully static at build time.
+export const revalidate = 30;
+
 export default async function RepairsPage() {
   const stores = await prisma.store.findMany({
     where: { status: "published", repairAvailable: true },
