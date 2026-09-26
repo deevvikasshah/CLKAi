@@ -77,7 +77,7 @@ export default async function OrderConfirmationPage({ params }: { params: { orde
 
       <p className="mt-6 text-center text-xs text-ink-500">
         Keep your order number for reference. For questions, use the{" "}
-        <a href="/contact" className="underline hover:text-brand-600">
+        <a href="/contact" className="underline hover:text-brand-600 focus-ring">
           Contact
         </a>{" "}
         page.

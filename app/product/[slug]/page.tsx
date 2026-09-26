@@ -12,6 +12,10 @@ interface ProductPageProps {
   searchParams?: { enquirySubmitted?: string };
 }
 
+// Balance freshness (price/stock changes from admin) against not hitting
+// the DB on every single request.
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: ProductPageProps) {
   const product = await prisma.product.findUnique({ where: { slug: params.slug } });
   return { title: product?.title ?? "Product not found" };
@@ -63,8 +67,38 @@ export default async function ProductDetailPage({ params, searchParams }: Produc
     })
     .filter((c): c is ProductCardData => c !== null);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    sku: product.sku,
+    brand: { "@type": "Brand", name: product.brand.name },
+    ...(defaultVariant
+      ? {
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "INR",
+            price: defaultVariant.price,
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : {}),
+  };
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Shop", item: `${siteUrl}/shop` },
+      { "@type": "ListItem", position: 2, name: product.category.name, item: `${siteUrl}/shop/${product.category.slug}` },
+      { "@type": "ListItem", position: 3, name: product.title, item: `${siteUrl}/product/${product.slug}` },
+    ],
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <nav aria-label="Breadcrumb" className="text-xs text-ink-500">
         <a href="/shop" className="hover:text-brand-600">
           Shop

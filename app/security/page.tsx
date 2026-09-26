@@ -24,7 +24,7 @@ export default function SecurityPage() {
         {siteConfig.security.disclosureEmail ? (
           <p>
             Report security issues to{" "}
-            <a href={`mailto:${siteConfig.security.disclosureEmail}`} className="text-brand-600 hover:text-brand-500">
+            <a href={`mailto:${siteConfig.security.disclosureEmail}`} className="text-brand-600 hover:text-brand-500 focus-ring">
               {siteConfig.security.disclosureEmail}
             </a>
             .
@@ -33,7 +33,7 @@ export default function SecurityPage() {
           <p className="text-ink-500">
             A dedicated security contact email will be published here once CLKAi designates one. In the
             meantime, use the{" "}
-            <a href="/contact" className="text-brand-600 hover:text-brand-500">
+            <a href="/contact" className="text-brand-600 hover:text-brand-500 focus-ring">
               Contact
             </a>{" "}
             page and mark your message as a security report.

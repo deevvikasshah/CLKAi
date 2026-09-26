@@ -41,7 +41,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               <th className="w-40 text-left text-ink-500"></th>
               {products.map((p) => (
                 <th key={p.id} className="border-b border-ink-100 px-3 py-2 text-left">
-                  <a href={`/product/${p.slug}`} className="font-semibold text-ink-900 hover:text-brand-600">
+                  <a href={`/product/${p.slug}`} className="font-semibold text-ink-900 hover:text-brand-600 focus-ring">
                     {p.title}
                   </a>
                   <p className="text-xs text-ink-500">{p.brand.name}</p>

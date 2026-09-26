@@ -28,7 +28,7 @@ export default function AboutPage() {
           <h2 className="text-base font-semibold text-ink-900">Store presence</h2>
           <p className="mt-2">
             CLKAi currently operates stores across Mumbai, Pune and Nashik. See the{" "}
-            <a href="/stores" className="text-brand-600 hover:text-brand-500">
+            <a href="/stores" className="text-brand-600 hover:text-brand-500 focus-ring">
               Store Locator
             </a>{" "}
             for current locations and services at each store. We plan to add more stores across
@@ -43,7 +43,7 @@ export default function AboutPage() {
             such as screen and battery replacement, charging faults, software support, and hardware
             repair. Repair terms, diagnostic fees and turnaround times are confirmed by the store after
             inspecting the device — see{" "}
-            <a href="/repairs" className="text-brand-600 hover:text-brand-500">
+            <a href="/repairs" className="text-brand-600 hover:text-brand-500 focus-ring">
               Repairs &amp; Services
             </a>
             .

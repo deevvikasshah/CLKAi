@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const store = await prisma.store.findUnique({ where: { slug: params.slug } });
   if (!store || store.status !== "published") return { title: "Store not found" };

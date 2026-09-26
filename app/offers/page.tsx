@@ -10,8 +10,20 @@ export default async function OffersPage() {
     orderBy: { startsAt: "desc" },
   });
 
+  const offersLd = offers.map((offer) => ({
+    "@context": "https://schema.org",
+    "@type": "Offer",
+    name: offer.title,
+    description: offer.description ?? undefined,
+    validFrom: offer.startsAt.toISOString(),
+    validThrough: offer.endsAt.toISOString(),
+  }));
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+      {offersLd.map((ld, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      ))}
       <h1 className="text-2xl font-bold text-ink-900">Offers</h1>
 
       {offers.length === 0 ? (
