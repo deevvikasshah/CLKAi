@@ -121,6 +121,14 @@ export default async function RepairsPage() {
           backed up (or accept the risk of not backing up) my data.
         </label>
 
+        <p className="text-xs text-ink-500">
+          See our{" "}
+          <a href="/policies/privacy" className="underline hover:text-brand-600 focus-ring">
+            Privacy Policy
+          </a>{" "}
+          for how this information is used.
+        </p>
+
         <button
           type="submit"
           className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500 focus-ring"

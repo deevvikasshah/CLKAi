@@ -39,7 +39,7 @@ export default async function CheckoutPage() {
 
           <p className="text-xs text-ink-500">
             Your delivery details are used only to fulfil this order. See our{" "}
-            <a href="/policies/privacy" className="underline hover:text-brand-600">
+            <a href="/policies/privacy" className="underline hover:text-brand-600 focus-ring">
               Privacy Policy
             </a>
             .

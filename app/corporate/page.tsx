@@ -76,7 +76,7 @@ export default function CorporatePage({ searchParams }: { searchParams: { submit
 
         <p className="text-xs text-ink-500">
           See our{" "}
-          <a href="/policies/privacy" className="underline hover:text-brand-600">
+          <a href="/policies/privacy" className="underline hover:text-brand-600 focus-ring">
             Privacy Policy
           </a>{" "}
           for how this information is used.

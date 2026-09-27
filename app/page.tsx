@@ -71,7 +71,10 @@ export default async function HomePage() {
       take: 8,
     }),
     prisma.brand.findMany({ where: { enabled: true }, take: 12 }),
-    prisma.store.findMany({ where: { status: "published" }, take: 6 }),
+    // orderBy is required here — without it, a newly published store can
+    // fall outside the `take: 6` window behind older rows and never
+    // appear on the homepage at all (found via the acceptance test).
+    prisma.store.findMany({ where: { status: "published" }, orderBy: { updatedAt: "desc" }, take: 6 }),
   ]);
 
   const featuredCards = featured.map(toProductCard).filter(Boolean) as ProductCardData[];

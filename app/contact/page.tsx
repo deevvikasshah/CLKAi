@@ -86,6 +86,13 @@ export default function ContactPage({ searchParams }: { searchParams: { submitte
                 <input type="checkbox" name="marketingConsent" className="mt-0.5" />
                 I&rsquo;d like to receive marketing communication from CLKAi. This is optional.
               </label>
+              <p className="text-xs text-ink-500">
+                See our{" "}
+                <Link href="/policies/privacy" className="underline hover:text-brand-600 focus-ring">
+                  Privacy Policy
+                </Link>{" "}
+                for how this information is used.
+              </p>
               <button type="submit" className="self-start rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 focus-ring">
                 Send message
               </button>
