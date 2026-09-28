@@ -3,6 +3,7 @@
 Multi-store ecommerce and repair-service platform for CLKAi, an electronics
 retailer operating in Mumbai, Pune and Nashik, Maharashtra.
 
+
 ## Stack
 
 - **Next.js 14 (App Router)** + TypeScript + Tailwind CSS — full-stack, one
